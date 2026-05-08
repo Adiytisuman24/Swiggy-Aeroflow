@@ -29,10 +29,17 @@ Aeroflow minimizes decision fatigue and cognitive overhead by proactively orches
 
 ## ✨ Core Features
 
-- **Predictive Meal Intelligence**: Forecasts likely orders based on context (weather, schedule, etc.).
-- **Living Dynamic Cart**: Carts that evolve in real-time.
-- **Autonomous Grocery Replenishment**: Predicts depletion before it happens.
-- **AI Group Ordering**: Automatically merges team preferences and handles split logic.
+- **Intelligence Playground**: Interactive multi-agent orchestration console (`/intelligence`).
+- **Living Dynamic Cart**: A behavioral cart that evolves based on routines (`/cart`).
+- **Predictive Replenishment**: Grocery depletion forecasting with auto-order logic (`/grocery`).
+- **Ecosystem Architecture**: Deep dive into the technical stack and agent negotiation flow (`/ecosystem`).
+- **Autonomous Multi-Agent AI**: Specialized agents for Nutrition, Budget, Timing, and Social coordination.
+
+## 🛠 Tech Stack
+
+- **Frontend**: Next.js 15, TailwindCSS 4, Framer Motion, Lucide Icons.
+- **Backend**: Go (Orchestration), Python/FastAPI (Intelligence), gRPC.
+- **Data**: PostgreSQL, Redis.
 
 ---
 Built with ❤️ for Swiggy MCP.
