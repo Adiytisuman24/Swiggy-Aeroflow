@@ -28,30 +28,6 @@ export default function Home() {
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 glass border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(252,128,25,0.4)]">
-              <Zap className="text-black w-6 h-6 fill-current" />
-            </div>
-            <span className="text-2xl font-heading font-bold tracking-tight">
-              Aero<span className="text-primary">flow</span>
-            </span>
-          </div>
-          
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-            <a href="#features" className="hover:text-primary transition-colors">Features</a>
-            <a href="#intelligence" className="hover:text-primary transition-colors">Intelligence</a>
-            <a href="#ecosystem" className="hover:text-primary transition-colors">Ecosystem</a>
-          </div>
-
-          <button className="px-6 py-2.5 bg-primary text-black font-bold rounded-full hover:shadow-[0_0_25px_rgba(252,128,25,0.5)] transition-all transform hover:scale-105">
-            Launch Portal
-          </button>
-        </div>
-      </nav>
-
       {/* Hero Section */}
       <section className="pt-40 pb-20 px-6">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
