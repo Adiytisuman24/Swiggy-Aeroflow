@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Zap, Brain, ShoppingCart, LayoutDashboard, Layers } from "lucide-react";
+import { Zap, Brain, ShoppingCart, LayoutDashboard, Layers, ShoppingBasket } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "Home", icon: <LayoutDashboard className="w-4 h-4" /> },
   { href: "/intelligence", label: "Intelligence", icon: <Brain className="w-4 h-4" /> },
   { href: "/cart", label: "Living Cart", icon: <ShoppingCart className="w-4 h-4" /> },
+  { href: "/grocery", label: "Grocery", icon: <ShoppingBasket className="w-4 h-4" /> },
   { href: "/ecosystem", label: "Ecosystem", icon: <Layers className="w-4 h-4" /> },
 ];
 

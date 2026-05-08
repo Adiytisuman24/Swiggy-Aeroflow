@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from agents import RecommendationEngine, UserContext
+from depletion import DepletionEngine, GroceryItem, DEFAULT_ITEMS
 
 app = FastAPI(
     title="Aeroflow AI Intelligence Layer",
@@ -17,6 +18,26 @@ app.add_middleware(
 )
 
 engine = RecommendationEngine()
+depletion_engine = DepletionEngine()
+
+
+@app.get("/depletion/{user_id}")
+async def get_depletion_forecast(user_id: str):
+    """Forecast grocery depletion for a user based on default tracked items."""
+    forecasts = depletion_engine.forecast(DEFAULT_ITEMS)
+    return {
+        "user_id": user_id,
+        "forecasts": [f.model_dump() for f in forecasts],
+        "total_tracked": len(DEFAULT_ITEMS),
+        "critical_count": sum(1 for f in forecasts if f.urgency == "critical"),
+    }
+
+
+@app.post("/depletion/custom")
+async def get_custom_depletion(items: list[GroceryItem]):
+    """Forecast depletion for a custom list of grocery items."""
+    forecasts = depletion_engine.forecast(items)
+    return {"forecasts": [f.model_dump() for f in forecasts]}
 
 
 @app.get("/")

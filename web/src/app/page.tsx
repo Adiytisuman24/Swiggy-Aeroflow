@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { 
-  Zap, 
   ShoppingCart, 
   Brain, 
   Clock, 
@@ -12,7 +11,8 @@ import {
   ChevronRight,
   Sparkles,
   UtensilsCrossed,
-  LayoutDashboard
+  LayoutDashboard,
+  Zap
 } from "lucide-react";
 
 const fadeIn = {
