@@ -2,11 +2,11 @@ services:
   # 1. AeroFlow Go Core Orchestrator Backend
   - type: web
     name: aeroflow-core
-    env: go
+    env: docker
     repo: https://github.com/Adiytisuman24/Swiggy-Aeroflow
     branch: main
-    buildCommand: cd core && go build -o main .
-    startCommand: cd core && ./main
+    dockerfilePath: core/Dockerfile
+    dockerContext: core
     envVars:
       - key: PORT
         value: 8080
@@ -18,11 +18,11 @@ services:
   # 2. AeroFlow Python AI Service Backend
   - type: web
     name: aeroflow-ai
-    env: python
+    env: docker
     repo: https://github.com/Adiytisuman24/Swiggy-Aeroflow
     branch: main
-    buildCommand: cd ai && pip install -r requirements.txt
-    startCommand: cd ai && uvicorn main:app --host 0.0.0.0 --port 8000
+    dockerfilePath: ai/Dockerfile
+    dockerContext: ai
     envVars:
       - key: PORT
         value: 8000
@@ -30,11 +30,11 @@ services:
   # 3. AeroFlow Next.js Frontend (Render fallback - Vercel is preferred for web)
   - type: web
     name: aeroflow-web
-    env: node
+    env: docker
     repo: https://github.com/Adiytisuman24/Swiggy-Aeroflow
     branch: main
-    buildCommand: cd web && npm install && npm run build
-    startCommand: cd web && npm run start
+    dockerfilePath: web/Dockerfile
+    dockerContext: web
     envVars:
       - key: PORT
         value: 3000
