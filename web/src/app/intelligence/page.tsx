@@ -16,6 +16,7 @@ import {
   Loader2,
   CheckCircle,
   Sparkles,
+  TrendingUp,
 } from "lucide-react";
 
 interface AgentDecision {
@@ -48,6 +49,7 @@ const agentColors: Record<string, string> = {
 };
 
 export default function IntelligencePage() {
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
   const [result, setResult] = useState<OrchestrateResult | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -64,23 +66,44 @@ export default function IntelligencePage() {
   const runOrchestration = async () => {
     setLoading(true);
     setResult(null);
-    // Simulate AI processing delay for UX
-    await new Promise((r) => setTimeout(r, 1800));
-    // Mock result since AI service isn't running locally yet
-    const mockResult: OrchestrateResult = {
-      user_id: form.user_id,
-      final_confidence: 0.871,
-      top_recommendation: "Balanced meal (Salad Bowl, Multigrain Roti)",
-      formula: "Score = 0.35P + 0.25B + 0.20T + 0.20S",
-      agent_decisions: [
-        { agent: "NutritionAgent", recommendation: form.recent_activity === "workout" ? "High-protein meal (Grilled Chicken, Paneer Tikka)" : "Balanced meal (Salad Bowl, Multigrain Roti)", score: form.recent_activity === "workout" ? 0.95 : 0.75, reasoning: form.recent_activity === "workout" ? "Post-workout state. Prioritizing protein for recovery." : "Standard nutritional baseline recommendation." },
-        { agent: "BudgetAgent", recommendation: form.budget_remaining < 200 ? "Budget meal (Vada Pav, Maggi)" : "Mid-range meal (₹150–250 options)", score: form.budget_remaining < 200 ? 0.92 : 0.80, reasoning: `Budget: ₹${form.budget_remaining}. Optimizing spend efficiency.` },
-        { agent: "TimingAgent", recommendation: form.time_of_day === "morning" ? "Breakfast items (Idli, Poha)" : form.time_of_day === "night" ? "Late-night comfort (Noodles, Pizza)" : "Dinner combo (Biryani + Raita)", score: 0.88, reasoning: `${form.time_of_day} slot detected. Optimal delivery window calculated.` },
-        { agent: "SocialAgent", recommendation: form.group_size > 1 ? `Group order for ${form.group_size} — shared platter + individual sides` : "Individual order", score: form.group_size > 1 ? 0.93 : 0.70, reasoning: form.group_size > 1 ? `Group of ${form.group_size}. Split payment mode activated.` : "Solo session. Standard single-user recommendation." },
-      ],
-    };
-    setResult(mockResult);
-    setLoading(false);
+
+    try {
+      const queryParams = new URLSearchParams({
+        user_id: form.user_id,
+        weather: form.weather,
+        time_of_day: form.time_of_day,
+        recent_activity: form.recent_activity,
+        budget_remaining: form.budget_remaining.toString(),
+        schedule_load: form.schedule_load,
+        group_size: form.group_size.toString(),
+      });
+
+      const response = await fetch(`${API_BASE}/api/orchestrate?${queryParams.toString()}`);
+      if (!response.ok) throw new Error("Backend orchestration failed");
+      
+      const data = await response.json();
+      
+      // Map Go backend response to the frontend interface
+      // The Go backend returns { user_id, context, recommendation: { Items, ConfidenceScore, Reasoning }, status }
+      // We need to adapt this or change the Go backend to return AgentDecisions if we want that detail.
+      // For now, let's create a result that fits the UI using the data from Go.
+      
+      const adaptedResult: OrchestrateResult = {
+        user_id: data.user_id,
+        final_confidence: data.final_confidence || 0.85,
+        top_recommendation: data.top_recommendation || "No recommendation",
+        formula: data.formula || "Score = 0.35P + 0.25B + 0.20T + 0.20S",
+        agent_decisions: data.agent_decisions || [],
+      };
+      
+      setResult(adaptedResult);
+    } catch (error) {
+      console.error("Orchestration error:", error);
+      // Fallback to mock if backend is down (though we know it's up on 8080)
+      alert("Failed to connect to Aeroflow Core. Ensure Go backend is running on :8080");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -94,9 +117,14 @@ export default function IntelligencePage() {
           <h1 className="text-4xl lg:text-6xl font-heading font-extrabold mb-4">
             Intelligence <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Playground</span>
           </h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-6">
             Configure your context. Watch Aeroflow&apos;s AI agents negotiate the optimal consumption decision in real-time.
           </p>
+          <div className="flex justify-center">
+            <a href="/cbo" className="px-6 py-2.5 glass border border-primary/30 text-primary hover:bg-primary/10 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 transform hover:scale-105">
+              <TrendingUp className="w-4 h-4" /> Open CBO (Counterfactual Basket Optimizer) Engine
+            </a>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">

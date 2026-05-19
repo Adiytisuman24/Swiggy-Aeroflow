@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Zap, Brain, ShoppingCart, LayoutDashboard, Layers, ShoppingBasket } from "lucide-react";
+import { Zap, Brain, ShoppingCart, LayoutDashboard, Layers, ShoppingBasket, TrendingUp } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "Home", icon: <LayoutDashboard className="w-4 h-4" /> },
   { href: "/intelligence", label: "Intelligence", icon: <Brain className="w-4 h-4" /> },
+  { href: "/cbo", label: "CBO Engine", icon: <TrendingUp className="w-4 h-4" /> },
   { href: "/cart", label: "Living Cart", icon: <ShoppingCart className="w-4 h-4" /> },
   { href: "/grocery", label: "Grocery", icon: <ShoppingBasket className="w-4 h-4" /> },
   { href: "/ecosystem", label: "Ecosystem", icon: <Layers className="w-4 h-4" /> },
@@ -45,7 +46,7 @@ export default function Navbar() {
         </div>
 
         <Link
-          href="/intelligence"
+          href="/portal"
           className="px-6 py-2.5 bg-primary text-black font-bold rounded-full hover:shadow-[0_0_25px_rgba(252,128,25,0.5)] transition-all transform hover:scale-105"
         >
           Launch Portal

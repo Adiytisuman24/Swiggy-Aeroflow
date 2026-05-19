@@ -1,0 +1,42 @@
+services:
+  # 1. AeroFlow Go Core Orchestrator Backend
+  - type: web
+    name: aeroflow-core
+    env: go
+    repo: https://github.com/Adiytisuman24/Swiggy-Aeroflow
+    branch: main
+    buildCommand: cd core && go build -o main .
+    startCommand: cd core && ./main
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: AI_SERVICE_URL
+        value: https://aeroflow-ai.onrender.com
+      - key: GIN_MODE
+        value: release
+
+  # 2. AeroFlow Python AI Service Backend
+  - type: web
+    name: aeroflow-ai
+    env: python
+    repo: https://github.com/Adiytisuman24/Swiggy-Aeroflow
+    branch: main
+    buildCommand: cd ai && pip install -r requirements.txt
+    startCommand: cd ai && uvicorn main:app --host 0.0.0.0 --port 8000
+    envVars:
+      - key: PORT
+        value: 8000
+
+  # 3. AeroFlow Next.js Frontend (Render fallback - Vercel is preferred for web)
+  - type: web
+    name: aeroflow-web
+    env: node
+    repo: https://github.com/Adiytisuman24/Swiggy-Aeroflow
+    branch: main
+    buildCommand: cd web && npm install && npm run build
+    startCommand: cd web && npm run start
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: NEXT_PUBLIC_API_URL
+        value: https://aeroflow-core.onrender.com

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from agents import RecommendationEngine, UserContext
 from depletion import DepletionEngine, GroceryItem, DEFAULT_ITEMS
+from cbo import CBOEngine, CBORequest
 
 app = FastAPI(
     title="Aeroflow AI Intelligence Layer",
@@ -19,6 +20,7 @@ app.add_middleware(
 
 engine = RecommendationEngine()
 depletion_engine = DepletionEngine()
+cbo_engine = CBOEngine()
 
 
 @app.get("/depletion/{user_id}")
@@ -81,3 +83,13 @@ async def predict(
         group_size=group_size
     )
     return engine.orchestrate(ctx)
+
+
+@app.post("/cbo")
+async def run_cbo(req: CBORequest):
+    """
+    Counterfactual Basket Optimization endpoint.
+    Computes User Intent, Area Affinity, Offer Uplift, Margin, and AOV Impact.
+    Simulates counterfactual cart scenarios.
+    """
+    return cbo_engine.optimize_basket(req)

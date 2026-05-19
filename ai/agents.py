@@ -35,21 +35,33 @@ class AgentDecision(BaseModel):
 class NutritionAgent:
     """
     Analyzes user activity and suggests macro-optimal meals.
-    Post-workout → high protein. Stressful day → comfort carbs.
+    Post-workout → high protein. Stressful day/monsoon → comfort carbs.
     """
     def evaluate(self, ctx: UserContext) -> AgentDecision:
-        if ctx.recent_activity == "workout":
-            rec = "High-protein meal (Grilled Chicken, Paneer Tikka)"
-            score = 0.95
-            reasoning = "Post-workout state detected. Prioritizing protein for muscle recovery."
-        elif ctx.schedule_load == "high":
-            rec = "Comfort food (Biryani, Dal Makhani)"
-            score = 0.88
-            reasoning = "High cognitive load detected. Recommending energy-dense comfort meals."
+        w = ctx.weather.lower() if ctx.weather else "clear"
+        act = ctx.recent_activity.lower() if ctx.recent_activity else "sedentary"
+
+        if act == "workout":
+            if w in ["rainy", "cloudy"]:
+                rec = "Warm Protein Chicken Ramen & Soft Boiled Eggs"
+                score = 0.96
+                reasoning = "Post-workout muscle recovery in cold/rainy weather. Recommending warm high-protein broth."
+            else:
+                rec = "Chilled Double-Protein Shake & Grilled Avocado Salad"
+                score = 0.95
+                reasoning = "Post-workout state in clear weather. Prioritizing lean protein and muscle recovery."
+        elif ctx.schedule_load == "high" or w == "rainy":
+            rec = "Comfort food (Hot Chicken Biryani, Dal Makhani with Garlic Naan)"
+            score = 0.90
+            reasoning = "High schedule load or rainy weather detected. Recommending comforting energy-dense carbs."
+        elif w == "cloudy":
+            rec = "Soothing Warm Quinoa Khichdi & Steamed Veggies"
+            score = 0.85
+            reasoning = "Overcast weather. Recommending light, soothing comfort nutrition."
         else:
-            rec = "Balanced meal (Salad Bowl, Multigrain Roti)"
-            score = 0.75
-            reasoning = "Standard nutritional baseline recommendation."
+            rec = "Balanced Superfood Salad Bowl & Whole Wheat Tortilla Wrap"
+            score = 0.78
+            reasoning = "Standard clear day. Recommending balanced macro distribution."
 
         return AgentDecision(agent="NutritionAgent", recommendation=rec, score=score, reasoning=reasoning)
 
@@ -62,18 +74,40 @@ class BudgetAgent:
     Ensures recommendations stay within user's weekly/daily budget envelope.
     """
     def evaluate(self, ctx: UserContext) -> AgentDecision:
-        if ctx.budget_remaining and ctx.budget_remaining < 100:
-            rec = "Budget meal (Vada Pav, Maggi, Home Kitchen specials)"
-            score = 0.92
-            reasoning = f"Budget critically low (₹{ctx.budget_remaining}). Recommending cost-effective options."
-        elif ctx.budget_remaining and ctx.budget_remaining < 300:
-            rec = "Mid-range meal (₹150–250 options)"
-            score = 0.80
-            reasoning = f"Moderate budget available (₹{ctx.budget_remaining}). Balanced spend recommended."
+        w = ctx.weather.lower() if ctx.weather else "clear"
+        b = ctx.budget_remaining if ctx.budget_remaining is not None else 500.0
+
+        if b < 150:
+            if w == "rainy":
+                rec = "Hot Cutting Chai & Baked Vada Pav combo (₹75)"
+                score = 0.94
+                reasoning = f"Budget is critical (₹{b}). Recommending a cheap monsoon classic."
+            else:
+                rec = "Single Plate Masala Maggi & Fried Egg (₹65)"
+                score = 0.92
+                reasoning = f"Budget critically low (₹{b}). Recommending satisfying budget-friendly food."
+        elif b < 300:
+            if w == "rainy":
+                rec = "Spicy Egg Hakka Noodles & Clear Soup (₹190)"
+                score = 0.88
+                reasoning = f"Moderate budget (₹{b}). Recommending warm comfort noodles."
+            else:
+                rec = "Healthy Paneer Tikka Salad Bowl (₹180)"
+                score = 0.84
+                reasoning = f"Moderate budget (₹{b}). Standard mid-range meal recommended."
         else:
-            rec = "Premium options available"
-            score = 0.60
-            reasoning = "Budget is healthy. Premium recommendations unlocked."
+            if w == "rainy":
+                rec = "Premium Butter Chicken, Garlic Naan & Hot Belgian Cocoa (₹480)"
+                score = 0.89
+                reasoning = "Budget is healthy. Unlocking premium warming monsoon delicacies."
+            elif w == "cloudy":
+                rec = "Slow-Brewed Cafe Mocha & Gourmet Mushroom Panini (₹380)"
+                score = 0.86
+                reasoning = "Healthy budget. Recommending coffee-shop style premium comfort pairing."
+            else:
+                rec = "Premium Grilled Salmon & Quinoa Pilaf (₹450)"
+                score = 0.75
+                reasoning = "Budget is healthy. Premium fresh dining recommendation unlocked."
 
         return AgentDecision(agent="BudgetAgent", recommendation=rec, score=score, reasoning=reasoning)
 
@@ -86,16 +120,41 @@ class TimingAgent:
     Optimizes when to place an order for best delivery ETA.
     """
     def evaluate(self, ctx: UserContext) -> AgentDecision:
-        timing_map = {
-            "morning": ("Breakfast items (Idli, Poha, Upma)", 0.90, "Morning routine detected. Order now for 15-min delivery."),
-            "afternoon": ("Lunch (Thali, Rice bowl)", 0.85, "Peak lunch hour. Ordering now avoids 6PM surge."),
-            "evening": ("Snacks + Dinner (Chai + Biryani combo)", 0.88, "Evening wind-down. Pre-order dinner to arrive by 8PM."),
-            "night": ("Late-night comfort (Noodles, Pizza)", 0.78, "Late hour detected. Limited restaurants, fast options prioritized."),
-        }
-        rec, score, reasoning = timing_map.get(
-            ctx.time_of_day,
-            ("Balanced meal", 0.70, "Default timing recommendation.")
-        )
+        w = ctx.weather.lower() if ctx.weather else "clear"
+        t = ctx.time_of_day.lower() if ctx.time_of_day else "evening"
+
+        if w == "rainy":
+            if t == "morning":
+                rec = "Hot Filter Coffee & Steamed Idli (ETA 16 min)"
+                score = 0.92
+                reasoning = "Rainy morning. Logistics starting to queue. Order now to get priority dispatch."
+            elif t in ["afternoon", "evening"]:
+                rec = "Monsoon Warm Platter Combo (ETA 22 min)"
+                score = 0.93
+                reasoning = "Heavy rainfall delivery surge active. Pre-ordering dinner combo locks in current ETA."
+            else:
+                rec = "Late-night Spicy Ramen Cup (ETA 28 min)"
+                score = 0.82
+                reasoning = "Rainy late hour logistics constraint. Recommending fast-cooking options."
+        elif w == "cloudy":
+            if t == "evening":
+                rec = "Chai Flask & Crispy Samosa Platter (ETA 14 min)"
+                score = 0.90
+                reasoning = "Overcast evening. Ideal weather for hot tea. Delivery routes are clear."
+            else:
+                rec = "Standard Meal combo (ETA 15 min)"
+                score = 0.86
+                reasoning = "Cloudy sky. Normal delivery times active."
+        else:
+            if t == "morning":
+                rec = "Fresh Cold-Pressed Juice & Acai Bowl (ETA 10 min)"
+                score = 0.94
+                reasoning = "Clear morning. Ultra-fast breakfast prep and dispatch active."
+            else:
+                rec = "Quick Delivery Entree (ETA 12 min)"
+                score = 0.88
+                reasoning = "Clear skies. Delivery drivers running at maximum velocity."
+
         return AgentDecision(agent="TimingAgent", recommendation=rec, score=score, reasoning=reasoning)
 
 
@@ -107,14 +166,27 @@ class SocialAgent:
     Handles group order logic — merging preferences, handling splits.
     """
     def evaluate(self, ctx: UserContext) -> AgentDecision:
-        if ctx.group_size and ctx.group_size > 1:
-            rec = f"Group order for {ctx.group_size} people — suggest shared platter + individual sides"
-            score = 0.93
-            reasoning = f"Group of {ctx.group_size} detected. Activating split payment and preference merge."
+        w = ctx.weather.lower() if ctx.weather else "clear"
+        g = ctx.group_size if ctx.group_size is not None else 1
+
+        if g > 1:
+            if w == "rainy":
+                rec = f"Monsoon Platter Combo (Momos, Tikka, Kebabs, 4x Chai) for group of {g}"
+                score = 0.95
+                reasoning = f"Rainy group gathering ({g} people). Automatically suggesting combo platters with split-bill."
+            else:
+                rec = f"Group Share-Pack Combo (Noodles, Manchurian, Starters) for group of {g}"
+                score = 0.91
+                reasoning = f"Group size of {g} detected. Merging dietary preferences and activating group-savings checkout."
         else:
-            rec = "Individual order"
-            score = 0.70
-            reasoning = "Solo session. Standard single-user recommendation."
+            if w == "rainy":
+                rec = "Solo comfort bowl (Noodles or Warm Soup)"
+                score = 0.78
+                reasoning = "Solo rainy session. Prioritizing single-serving warm comfort food."
+            else:
+                rec = "Single portion standard meal"
+                score = 0.70
+                reasoning = "Solo clear-day session. Standard single-serving recommendation."
 
         return AgentDecision(agent="SocialAgent", recommendation=rec, score=score, reasoning=reasoning)
 

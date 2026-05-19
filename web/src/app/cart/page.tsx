@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingCart,
@@ -25,13 +25,6 @@ interface CartItem {
   nutrition: string;
 }
 
-const initialItems: CartItem[] = [
-  { id: "1", name: "Chicken Biryani", restaurant: "Behrouz Biryani", price: 349, quantity: 1, tag: "predicted", nutrition: "Protein: 38g | Carbs: 72g" },
-  { id: "2", name: "Multigrain Roti (4pc)", restaurant: "HomeMade Kitchen", price: 80, quantity: 1, tag: "auto-replenish", nutrition: "Fiber: 6g | Carbs: 48g" },
-  { id: "3", name: "Cold Brew Coffee", restaurant: "Blue Tokai", price: 189, quantity: 1, tag: "predicted", nutrition: "Caffeine: 150mg | Cal: 20" },
-  { id: "4", name: "Milk 1L", restaurant: "Swiggy Instamart", price: 65, quantity: 2, tag: "auto-replenish", nutrition: "Protein: 8g | Calcium: 300mg" },
-];
-
 const tagStyle: Record<CartItem["tag"], string> = {
   predicted: "bg-primary/15 text-primary border-primary/30",
   added: "bg-secondary/15 text-secondary border-secondary/30",
@@ -45,30 +38,100 @@ const tagLabel: Record<CartItem["tag"], string> = {
 };
 
 export default function CartPage() {
-  const [items, setItems] = useState<CartItem[]>(initialItems);
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  const [items, setItems] = useState<CartItem[]>([]);
   const [aiPulse, setAiPulse] = useState(false);
 
-  const updateQty = (id: string, delta: number) => {
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/cart`);
+        if (res.ok) {
+          const data = await res.json();
+          setItems(data || []);
+        }
+      } catch (e) {
+        console.error("Cart fetch error:", e);
+      }
+    };
+    fetchCart();
+  }, [API_BASE]);
+
+  const updateQty = async (id: string, delta: number) => {
+    const targetItem = items.find(i => i.id === id);
+    if (!targetItem) return;
+
+    const newQty = targetItem.quantity + delta;
+
+    // Optimistic UI update
     setItems((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item
+        item.id === id ? { ...item, quantity: newQty } : item
       ).filter((item) => item.quantity > 0)
     );
+
+    try {
+      const res = await fetch(`${API_BASE}/api/cart/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, quantity: newQty })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setItems(data || []);
+      }
+    } catch (e) {
+      console.error("Update qty error:", e);
+    }
   };
 
-  const removeItem = (id: string) => {
+  const removeItem = async (id: string) => {
+    // Optimistic UI update
     setItems((prev) => prev.filter((item) => item.id !== id));
+
+    try {
+      const res = await fetch(`${API_BASE}/api/cart/remove`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setItems(data || []);
+      }
+    } catch (e) {
+      console.error("Remove item error:", e);
+    }
   };
 
-  const refresh = () => {
+  const refresh = async () => {
     setAiPulse(true);
-    setTimeout(() => {
-      setItems([
-        ...initialItems,
-        { id: "5", name: "Protein Shake", restaurant: "Swiggy Instamart", price: 129, quantity: 1, tag: "predicted", nutrition: "Protein: 25g | Cal: 130" },
-      ]);
-      setAiPulse(false);
-    }, 1500);
+    try {
+      const newItem = {
+        name: "Protein Shake",
+        restaurant: "Swiggy Instamart",
+        price: 129,
+        quantity: 1,
+        tag: "predicted",
+        nutrition: "Protein: 25g | Cal: 130"
+      };
+
+      const res = await fetch(`${API_BASE}/api/cart/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newItem)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setItems(data || []);
+      }
+    } catch (e) {
+      console.error("Refresh AI error:", e);
+    } finally {
+      setTimeout(() => {
+        setAiPulse(false);
+      }, 800);
+    }
   };
 
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
